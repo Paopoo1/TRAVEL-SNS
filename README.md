@@ -13,11 +13,11 @@ Browser-first travel SNS prototype. Serve this directory with `python3 -m http.s
 
 ## Geographic maps and font
 
-Leaflet 1.9.4 is bundled in `vendor/leaflet/` under its included BSD license. Actual geographic maps replace the earlier illustrations. The default CARTO basemap has no built-in text, and our place labels use the bundled M PLUS Rounded 1c font (SIL OFL; see `assets/fonts/OFL.txt`). The same rounded font is used in the app. Enable “Show street labels” for standard OpenStreetMap tiles; lettering inside those raster tiles is supplied by OpenStreetMap and cannot be restyled by CSS.
+Leaflet 1.9.4 is bundled in `vendor/leaflet/` under its included BSD license. Actual geographic maps replace the earlier illustrations. Standard OpenStreetMap raster tiles are the only basemap and require no API key. Place labels and the app use the bundled M PLUS Rounded 1c font (SIL OFL; see `assets/fonts/OFL.txt`). “Show place labels” toggles our spot labels; lettering baked into the OpenStreetMap tiles uses the provider's font and cannot be changed with CSS.
 
-Native geographic zoom, touch pinch, panning and reset are available. Views are retained during in-page navigation and language changes. Maps require online tile access to `basemaps.cartocdn.com` and optionally `tile.openstreetmap.org`; failures display a retry message rather than a fabricated map. OpenStreetMap and CARTO attribution stays visible.
+Native geographic zoom, touch pinch, panning and reset are available. Views are retained during in-page navigation and language changes. Maps require online access to `tile.openstreetmap.org`; failures display a retry message. OpenStreetMap attribution stays visible. CARTO is no longer used because its tile endpoint returned API-key-required images.
 
-Onboarding validation confirmed geographic point coordinates, map controls, tile source selection, markers, 100 m visit overlays, crowns, the bundled font and responsive UI. The cloud environment denied external tile requests, so a successful live background-tile render is not yet verified there. Network requirements were saved in the environment draft.
+Geographic coordinates, map controls, markers, 100 m visit overlays, crowns, the bundled font and responsive UI were checked. External tile access remains restricted in this cloud environment, so successful live background rendering there is not confirmed.
 
 ## Prototype limits
 
