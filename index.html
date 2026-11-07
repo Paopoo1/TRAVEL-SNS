@@ -10,7 +10,7 @@ body{background:#0c1220;color:#f5f8ff}main{padding-bottom:45px}.panel{background
 </style><script>
 const profileKey='trailbook-profile-v1';
 let profile='';try{profile=localStorage.getItem(profileKey)||''}catch{}
-let japanese=false;
+let japanese=true;
 const areas=[
  {name:'Kyoto',subtitle:'Higashiyama',spots:[['Kiyomizu-dera',22,72],['Ninenzaka',46,51],['Yasaka Shrine',72,24]],routes:[['Model walk','Temples & old streets',[0,1,2]],['Sample traveler route','Gion to Kiyomizu',[2,1,0]]]},
  {name:'Osaka',subtitle:'Namba',spots:[['Kuromon Market',23,69],['Dotonbori',50,45],['Hozenji',74,63]],routes:[['Model walk','Market to canal',[0,2,1]],['Sample traveler route','Canal & evening lanes',[1,2]]]},
@@ -115,5 +115,5 @@ $('shopMode').onclick=()=>{shopMode=!shopMode;renderView()};
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='collection'){collection=!collection;renderView()}else if(b.dataset.atlasArea!==undefined){area=Number(b.dataset.atlasArea);spot=Number(b.dataset.atlasSpot);route=0;collection=false;renderView();$('photoForm').scrollIntoView({block:'center',behavior:'smooth'})}else if(b.dataset.area!==undefined){area=Number(b.dataset.area);spot=0;route=0;collection=false;renderView()}else if(b.dataset.spot!==undefined){spot=Number(b.dataset.spot);renderView()}else if(b.dataset.route!==undefined){route=Number(b.dataset.route);spot=areas[area].routes[route][2][0];renderView()}});
 renderView();
 if(!profile)showProfile();
-</script></body></html>
+</script><script src="explore.js"></script></body></html>
 
