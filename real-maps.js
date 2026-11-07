@@ -39,7 +39,7 @@ function mountRealMap(root,mode,a){
  canvas.classList.toggle('hide-place-labels',!showPlaceLabels);let viewportReady=false;const refreshSize=()=>{if(!canvas.isConnected||!canvas.clientWidth||!canvas.clientHeight)return;map.invalidateSize({pan:false});if(!viewportReady){viewportReady=true;if(saved)map.setView(saved.center,saved.zoom);else initialView();}};const resizeObserver=new ResizeObserver(refreshSize);resizeObserver.observe(canvas);map.once('unload',()=>resizeObserver.disconnect());requestAnimationFrame(refreshSize);root.addEventListener('click',e=>e.stopPropagation());
 }
 function mountGeographicMaps(){
- if(typeof L==='undefined')return;
+ if(typeof L==='undefined'){document.querySelectorAll('.world-atlas,.local-atlas,#socialMap').forEach(root=>{root.innerHTML='';const notice=document.createElement('p');notice.className='map-loading';notice.setAttribute('role','alert');notice.textContent=tr('Map unavailable');const retry=document.createElement('button');retry.textContent=tr('Retry');retry.onclick=()=>location.reload();root.append(notice,retry);});return;}
  document.querySelectorAll('#socialMap').forEach(root=>mountRealMap(root,'feed',area));
  document.querySelectorAll('.world-atlas').forEach(root=>mountRealMap(root,'world',atlasArea));
  document.querySelectorAll('.local-atlas').forEach(root=>mountRealMap(root,'local',atlasArea));
