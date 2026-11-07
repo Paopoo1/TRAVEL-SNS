@@ -115,5 +115,5 @@ $('shopMode').onclick=()=>{shopMode=!shopMode;renderView()};
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='collection'){collection=!collection;renderView()}else if(b.dataset.atlasArea!==undefined){area=Number(b.dataset.atlasArea);spot=Number(b.dataset.atlasSpot);route=0;collection=false;renderView();$('photoForm').scrollIntoView({block:'center',behavior:'smooth'})}else if(b.dataset.area!==undefined){area=Number(b.dataset.area);spot=0;route=0;collection=false;renderView()}else if(b.dataset.spot!==undefined){spot=Number(b.dataset.spot);renderView()}else if(b.dataset.route!==undefined){route=Number(b.dataset.route);spot=areas[area].routes[route][2][0];renderView()}});
 renderView();
 if(!profile)showProfile();
-</script><script src="explore.js"></script><script src="social.js"></script></body></html>
+</script><script src="explore.js"></script><script src="social.js"></script><script src="feed.js"></script><link rel="stylesheet" href="feed.css"></body></html>
 
