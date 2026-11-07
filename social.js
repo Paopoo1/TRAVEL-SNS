@@ -1,4 +1,4 @@
-const theme=document.createElement('link');theme.rel='stylesheet';theme.href='social.css?v=real-map-20261107-2';document.body.append(theme);
+const theme=document.createElement('link');theme.rel='stylesheet';theme.href='social.css?v=gps-soft-20261107-1';document.body.append(theme);
 // UI translations are local; user-written names and event text remain unchanged.
 const localeNames={ja:'日本語',en:'English',ko:'한국어',zh:'简体中文',es:'Español',fr:'Français',de:'Deutsch',pt:'Português'};
 let locale='ja';try{const saved=localStorage.getItem('trailbook-language-v1');if(localeNames[saved])locale=saved;}catch{}
