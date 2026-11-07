@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Trailbook",
+    "slug": "trailbook-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "trailbook",
+    "plugins": ["expo-router", ["expo-image-picker", {"photosPermission": "旅の訪問記録に写真を追加するために使用します。", "cameraPermission": false, "microphonePermission": false}]],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

@@ -1,0 +1,119 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trailbook — Travel Map</title>
+<style>
+[hidden]{display:none!important}
+*{box-sizing:border-box}body{margin:0;background:#f5f2e9;color:#203930;font:16px/1.5 system-ui}main{max-width:960px;margin:auto;padding:22px}header{display:flex;align-items:center;justify-content:space-between}h1,h2,h3,p{margin:0 0 10px}h1{font:700 clamp(36px,8vw,68px)/1 Georgia;margin:20px 0 12px}h2{font-family:Georgia}button,input{font:inherit}button{cursor:pointer;border:1px solid #aab9af;border-radius:12px;background:#fffdf7;color:#203930;padding:10px 14px;min-height:44px}button[aria-pressed=true],button.primary{background:#234638;color:white;border-color:#234638}nav,.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.layout{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}.panel{background:#fffdf7;border:1px solid #dddcd1;border-radius:18px;padding:16px}.map{position:relative;height:310px;background:#e8eddf;border-radius:14px;overflow:hidden}.map svg{position:absolute;width:100%;height:100%;inset:0}.pin{position:absolute;transform:translate(-50%,-50%);border-radius:50%;width:44px;padding:0;font-weight:800}.pin.active{background:#b94732;color:white;border-color:#b94732}.route{width:100%;text-align:left;margin:5px 0}.muted,small{color:#52685d}img{width:100%;height:160px;object-fit:cover;border-radius:10px}.photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}label{display:block;margin:10px 0}input{max-width:100%}.detail{margin-top:18px}ol{padding-left:25px}a{color:#285d49}#status{min-height:24px} @media(max-width:680px){.layout{grid-template-columns:1fr}main{padding:14px}.map{height:260px}}
+</style></head><body><main><header><strong>TRAILBOOK</strong><button id="collection">My Trips</button></header><h1>Every trip, mapped.</h1><p>Explore an area, follow a route, and collect the places you visit.</p><nav id="areas" aria-label="Areas"></nav><div id="content"></div><p id="status" role="status"></p><small>Prototype · Schematic maps, sample routes and posts. Your photo records stay in this browser.</small></main>
+<style>
+body{background:#0c1220;color:#f5f8ff}main{padding-bottom:45px}.panel{background:#172236;border-color:#33445c}.muted,small{color:#b0bfd5}button{background:#26344b;border-color:#526481;color:#f5f8ff}button[aria-pressed=true],button.primary{background:#c9ff73;color:#14231c;border-color:#c9ff73}.map{background:#203642}.pin{background:#122532}.pin.active{outline:3px solid white;outline-offset:2px}.visited{background:var(--travel-color)!important;color:#17202a!important;border-color:var(--travel-color)!important}.area-label{display:block;font-size:11px;opacity:.8}.panel h2{overflow-wrap:anywhere}header strong{color:#c9ff73;letter-spacing:.18em}input{color:#f5f8ff;color-scheme:dark}.map path:first-child{opacity:.25}.map path:nth-child(2){opacity:.5}.map polyline{stroke:#c9ff73}.map.filled{box-shadow:inset 0 0 0 2px var(--travel-color)}
+</style><style>
+.atlas{margin:20px 0;padding:18px;background:#152034;border:1px solid #344963;border-radius:22px}.atlas-top{display:flex;justify-content:space-between;align-items:end;gap:12px}.atlas-top strong{font:700 36px Georgia;color:#c9ff73}.atlas-label{color:#c9ff73;font-size:11px;letter-spacing:.2em;font-weight:800}.atlas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:14px 0}.atlas-tile{min-height:72px;text-align:left;padding:9px;border-radius:8px;background:#222f43;border:1px dashed #64738b}.atlas-tile.visited{border-style:solid}.atlas-tile b,.atlas-tile span{display:block}.atlas-tile span{font-size:11px;opacity:.8}.atlas meter{width:100%;height:12px;accent-color:#c9ff73}.atlas meter::-webkit-meter-optimum-value{background:#c9ff73}.atlas small{display:block;margin-top:5px}
+</style><script>
+const profileKey='trailbook-profile-v1';
+let profile='';try{profile=localStorage.getItem(profileKey)||''}catch{}
+let japanese=false;
+const areas=[
+ {name:'Kyoto',subtitle:'Higashiyama',spots:[['Kiyomizu-dera',22,72],['Ninenzaka',46,51],['Yasaka Shrine',72,24]],routes:[['Model walk','Temples & old streets',[0,1,2]],['Sample traveler route','Gion to Kiyomizu',[2,1,0]]]},
+ {name:'Osaka',subtitle:'Namba',spots:[['Kuromon Market',23,69],['Dotonbori',50,45],['Hozenji',74,63]],routes:[['Model walk','Market to canal',[0,2,1]],['Sample traveler route','Canal & evening lanes',[1,2]]]},
+ {name:'Tokyo',subtitle:'Asakusa',spots:[['Kaminarimon',24,72],['Senso-ji',49,33],['Sumida Park',76,54]],routes:[['Model walk','Temple to riverside',[0,1,2]],['Sample traveler route','Riverside to temple',[2,1,0]]]}
+];
+let records=[];try{records=JSON.parse(localStorage.getItem('trailbook-v1')||'[]')}catch{}
+let area=0,spot=0,route=0,collection=false;
+const $=id=>document.getElementById(id);
+const visits=(a,s)=>records.filter(r=>r.area===a&&r.spot===s);
+const crown=list=>new Set(list.map(r=>r.date)).size>=3?' 👑':'';
+const colors=['#c9ff73','#ffad80','#91cfff'];
+const recordedCount=i=>areas[i].spots.filter((_,j)=>visits(i,j).length>0).length;
+function atlas(){
+ const total=areas.reduce((n,a)=>n+a.spots.length,0);
+ const count=areas.reduce((n,_,i)=>n+recordedCount(i),0);
+ return '<section class="atlas"><div class="atlas-top"><div><div class="atlas-label">TRAVEL COLLECTION</div><h2>My Atlas</h2></div><strong>'+Math.round(100*count/total)+'%</strong></div><meter aria-label="Collection progress" min="0" max="'+total+'" value="'+count+'"></meter><small>'+count+' of '+total+' places collected in this demo</small><div class="atlas-grid">'+areas.map((a,i)=>a.spots.map(([name],j)=>{const history=visits(i,j);return '<button class="atlas-tile '+(history.length?'visited':'')+'" style="--travel-color:'+colors[i]+'" data-atlas-area="'+i+'" data-atlas-spot="'+j+'"><b>'+name+crown(history)+'</b><span>'+a.name+' · '+(history.length?'Collected':'Unvisited')+'</span></button>';}).join('')).join('')+'</div><small>Pick a tile, then add a photo to fill it with your travel color.</small></section>';
+}
+function discovery(){
+ const a=areas[area];
+ const visited=new Set(a.spots.map((_,i)=>i).filter(i=>visits(area,i).length));
+ if(!visited.size)return '<section class="panel detail"><h2>Find your travel style</h2><p class="muted">Add a visit photo to see suggested places and sample travelers with stops in common.</p></section>';
+ const travelers=a.routes.slice(1).map(([,name,stops],i)=>({name,stops,route:i+1,common:stops.filter(i=>visited.has(i))})).filter(t=>t.common.length).sort((a,b)=>b.common.length-a.common.length);
+ const ideas=new Map();
+ for(const [,name,stops] of a.routes){
+  const common=stops.filter(i=>visited.has(i));
+  if(!common.length)continue;
+  for(const i of stops){
+   if(visited.has(i))continue;
+   const previous=ideas.get(i);
+   if(!previous||previous.common.length<common.length)ideas.set(i,{i,name,common});
+  }
+ }
+ const sorted=[...ideas.values()].sort((a,b)=>b.common.length-a.common.length);
+ const reason=items=>items.map(i=>a.spots[i][0]).join(', ');
+ return '<section class="panel detail"><h2>Next stops for you</h2>'+ (sorted.length?sorted.map(({i,name,common})=>'<button class="route" data-spot="'+i+'"><strong>'+a.spots[i][0]+'</strong><br><small>On “'+name+'” with '+reason(common)+', already in your collection.</small></button>').join(''):'<p class="muted">You’ve recorded every suggested stop in this area.</p>')+'<h2 class="detail">Travelers with stops in common</h2><p class="muted">Sample profiles · preview of matching through shared places.</p>'+(travelers.length?travelers.map(t=>'<button class="route" data-route="'+t.route+'"><strong>Sample traveler · '+t.name+'</strong><br><small>'+t.common.length+' in common · '+reason(t.common)+'</small></button>').join(''):'<p class="muted">The sample routes don’t share a stop with your collection yet.</p>')+'</section>';
+}
+const photos=list=>list.length?'<div class="photos">'+list.map(r=>'<img alt="Your trip photo" src="'+r.photo+'">').join('')+'</div>':'<p class="muted">Add your first photo for this place.</p>';
+function render(){
+ $('collection').textContent=collection?'Explore':'My Trips';
+ $('areas').innerHTML=areas.map((a,i)=>'<button data-area="'+i+'" class="'+(recordedCount(i)?'visited':'')+'" style="--travel-color:'+colors[i]+'" aria-pressed="'+(!collection&&i===area)+'">'+a.name+'<span class="area-label">'+recordedCount(i)+' / '+a.spots.length+' spots recorded</span></button>').join('');
+ if(collection){$('content').innerHTML='<div class="panel"><h2>My Trips</h2>'+ (records.length?areas.map((a,i)=>a.spots.map(([name],j)=>{const list=visits(i,j);return list.length?'<section class="detail"><h3>'+a.name+' · '+name+crown(list)+'</h3><p>'+new Set(list.map(r=>r.date)).size+' visit days</p>'+photos(list)+'</section>':''}).join('')).join(''):'<p>Your visited places appear here after you add a photo.</p>')+'</div>';return}
+ const a=areas[area], current=a.routes[route],list=visits(area,spot);
+ const points=current[2].map(i=>a.spots[i].slice(1).join(',')).join(' ');
+ $('content').innerHTML='<div class="layout"><section class="panel"><h2>'+a.name+' · '+a.subtitle+'</h2><div class="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 38 Q50 26 100 38 M34 0 Q29 50 34 100 M0 78 Q50 63 100 78" fill="none" stroke="#fffdf7" stroke-width="5"/><path d="M92 0 Q79 50 95 100" fill="none" stroke="#a4cad0" stroke-width="6"/><polyline points="'+points+'" fill="none" stroke="#ad4a36" stroke-width="1.2" stroke-dasharray="2 1"/></svg>'+a.spots.map(([name,x,y],i)=>'<button class="pin '+(i===spot?'active':'')+'" aria-label="'+name+'" title="'+name+'" data-spot="'+i+'" style="left:'+x+'%;top:'+y+'%">'+(i+1)+'</button>').join('')+'</div><small>Schematic · not for navigation</small></section><section class="panel"><h2>Routes</h2>'+a.routes.map(([kind,name],i)=>'<button class="route" data-route="'+i+'" aria-pressed="'+(i===route)+'"><small>'+kind+'</small><br><strong>'+name+'</strong></button>').join('')+'<ol>'+current[2].map(i=>'<li><button data-spot="'+i+'">'+a.spots[i][0]+'</button></li>').join('')+'</ol></section></div><section class="panel detail"><h2>'+a.spots[spot][0]+crown(list)+'</h2><p>My photos · a crown marks 3 different visit dates.</p>'+photos(list)+'<form id="photoForm"><label>Visit date <input id="date" type="date" required></label><label>Photo <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" required></label><button class="primary">Add to My Trips</button></form></section>';
+ $('date').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+ const map=$('content').querySelector('.map');
+ map.style.setProperty('--travel-color',colors[area]);
+ map.classList.toggle('filled',recordedCount(area)>0);
+ map.querySelectorAll('.pin').forEach((pin,i)=>{const history=visits(area,i);pin.classList.toggle('visited',history.length>0);pin.setAttribute('aria-pressed',String(i===spot));if(crown(history))pin.textContent='♛';});
+ $('content').insertAdjacentHTML('afterbegin',atlas());
+ $('content').insertAdjacentHTML('beforeend',discovery());
+ $('photoForm').onsubmit=async e=>{e.preventDefault();const file=$('photo').files[0],date=$('date').value,targetArea=area,targetSpot=spot;if(!file||!date)return;
+ try{const bitmap=await createImageBitmap(file);const factor=Math.min(1,720/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*factor));canvas.height=Math.max(1,Math.round(bitmap.height*factor));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();const next=[...records,{area:targetArea,spot:targetSpot,date,photo:canvas.toDataURL('image/jpeg',0.72)}];localStorage.setItem('trailbook-v1',JSON.stringify(next));records=next;$('status').textContent='Photo added to My Trips.';renderView()}catch{$('status').textContent='Could not save this photo. Try a smaller JPEG, PNG, or WebP image.'}};
+}
+const controls=document.createElement('div');
+controls.className='tabs';
+controls.innerHTML='<button id="profileButton"></button><button id="language"></button><button id="shopMode"></button>';
+$('areas').before(controls);
+const dialog=document.createElement('dialog');
+dialog.style.cssText='background:#172236;color:#fff;border:1px solid #526481;border-radius:18px;max-width:min(420px,90vw);padding:22px';
+dialog.innerHTML='<form id="profileForm"><h2>プロフィール / Profile</h2><p>ニックネームだけで始められます。<br>Use a nickname to start.</p><label>ニックネーム / Nickname <input id="nickname" maxlength="30" required></label><p id="profileError" role="status"></p><button class="primary">保存 / Save</button> <button type="button" id="closeProfile">閉じる / Close</button></form>';
+document.body.append(dialog);
+function showProfile(){ $('nickname').value=profile;dialog.showModal(); }
+$('closeProfile').onclick=()=>dialog.close();
+$('profileButton').onclick=showProfile;
+$('profileForm').onsubmit=e=>{e.preventDefault();const next=$('nickname').value.trim();if(!next)return;try{localStorage.setItem(profileKey,next);profile=next;dialog.close();renderView()}catch{$('profileError').textContent='保存できませんでした / Could not save.'}};
+const labels={'My Atlas':'マイ旅地図','My Trips':'旅コレクション','Explore':'地図を見る','Routes':'旅ルート','Model walk':'モデルコース','Sample traveler route':'旅行者ルート例','Next stops for you':'次のおすすめ','Travelers with stops in common':'同じ場所を巡った人','Add to My Trips':'写真を記録','Visit date':'訪問日','Photo':'写真','Collected':'収集済み','Unvisited':'未訪問','Find your travel style':'旅の好みを見つける','Your visited places appear here after you add a photo.':'写真を追加すると訪問先がここに並びます。'};
+let shopMode=false;
+const shopKey='trailbook-shop-draft-v1';
+function showShop(){
+ const copy=japanese?['店舗の管理','このブラウザに保存する掲載下書きです。','店舗名','掲載エリア','セール・イベントの見出し','下書きを保存','保存しました。']:['Shop workspace','Your listing draft is saved in this browser.','Shop name','Area','Sale or event headline','Save draft','Draft saved.'];
+ $('content').innerHTML='<section class="panel"><h2>'+copy[0]+'</h2><p class="muted">'+copy[1]+'</p><form id="shopForm"><label>'+copy[2]+' <input id="shopName" maxlength="80" required></label><label>'+copy[3]+' <input id="shopArea" maxlength="80" required></label><label>'+copy[4]+' <input id="shopHeadline" maxlength="120" required></label><button class="primary">'+copy[5]+'</button><p id="shopStatus" role="status"></p></form></section>';
+ try{const draft=JSON.parse(localStorage.getItem(shopKey)||'{}');$('shopName').value=draft.name||'';$('shopArea').value=draft.area||'';$('shopHeadline').value=draft.headline||''}catch{}
+ $('shopForm').onsubmit=e=>{e.preventDefault();const name=$('shopName').value.trim(),area=$('shopArea').value.trim(),headline=$('shopHeadline').value.trim();if(!name||!area||!headline)return;try{localStorage.setItem(shopKey,JSON.stringify({name,area,headline}));$('shopStatus').textContent=copy[6]}catch{$('shopStatus').textContent=japanese?'保存できませんでした。':'Could not save.'}};
+}
+function renderView(){
+ render();
+ document.documentElement.lang=japanese?'ja':'en';
+ $('profileButton').textContent=(japanese?'プロフィール':'Profile')+(profile?' · '+profile:'');
+ $('language').textContent=japanese?'English':'日本語';
+ $('shopMode').textContent=shopMode?(japanese?'個人用に戻る':'Back to personal'):(japanese?'お店用':'Shop workspace');
+ $('areas').hidden=shopMode;
+ $('collection').hidden=shopMode;
+ if(shopMode){showShop();return}
+ document.querySelector('h1').textContent=japanese?'旅を塗り集めよう。':'Every trip, mapped.';
+ document.querySelector('h1+p').textContent=japanese?'地図を開いて、行った場所に写真を残そう。':'Explore an area, follow a route, and collect the places you visit.';
+ if(japanese){
+  const walker=document.createTreeWalker($('content'),NodeFilter.SHOW_TEXT);
+  while(walker.nextNode()){const node=walker.currentNode;const value=node.nodeValue.trim();if(labels[value])node.nodeValue=node.nodeValue.replace(value,labels[value]);else if(node.parentElement.classList.contains('atlas-tile'))node.nodeValue=node.nodeValue.replace(/Collected|Unvisited/g,word=>labels[word]);}
+  if(!collection)$('collection').textContent='旅コレクション';else $('collection').textContent='地図を見る';
+ }
+ if(!collection){
+  const a=areas[area],link=document.createElement('a');
+  link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a.spots[spot][0]+', '+a.name);
+  link.target='_blank';link.rel='noopener noreferrer';link.style.color='#c9ff73';
+  link.textContent=japanese?'この場所をGoogle Mapsで開く ↗':'Find this place on Google Maps ↗';
+  $('photoForm').before(link);
+ }
+}
+$('language').onclick=()=>{japanese=!japanese;renderView()};
+$('shopMode').onclick=()=>{shopMode=!shopMode;renderView()};
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='collection'){collection=!collection;renderView()}else if(b.dataset.atlasArea!==undefined){area=Number(b.dataset.atlasArea);spot=Number(b.dataset.atlasSpot);route=0;collection=false;renderView();$('photoForm').scrollIntoView({block:'center',behavior:'smooth'})}else if(b.dataset.area!==undefined){area=Number(b.dataset.area);spot=0;route=0;collection=false;renderView()}else if(b.dataset.spot!==undefined){spot=Number(b.dataset.spot);renderView()}else if(b.dataset.route!==undefined){route=Number(b.dataset.route);spot=areas[area].routes[route][2][0];renderView()}});
+renderView();
+if(!profile)showProfile();
+</script></body></html>
+
